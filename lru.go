@@ -45,7 +45,7 @@ func (lru *Cache) String() string {
 
 	buf.WriteString("]")
 
-	return fmt.Sprintf("<%d>%s", lru.capacity, buf.String())
+	return fmt.Sprintf("<%d/%d>%s", len(lru.m), lru.capacity, buf.String())
 }
 
 func (lru *Cache) Existed(key string) bool {
