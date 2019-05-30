@@ -71,7 +71,7 @@ func (lru *Cache) Get(key string) *Entry {
 	return ele.Value.(*Entry)
 }
 
-func (lru *Cache) Add(key string, value *Entry) {
+func (lru *Cache) Add(value *Entry) {
 	if lru.capacity == 0 {
 		return
 	}
@@ -83,13 +83,13 @@ func (lru *Cache) Add(key string, value *Entry) {
 
 		ele.Value = value
 		lru.l.MoveToFront(ele)
-		lru.m[key] = ele
+		lru.m[value.key] = ele
 
 		return
 	}
 
 	node := lru.l.PushFront(value)
-	lru.m[key] = node
+	lru.m[value.key] = node
 }
 
 func (lru *Cache) Remove(key string) {
