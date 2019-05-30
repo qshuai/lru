@@ -1,10 +1,10 @@
 package lru
 
 type lrucache interface {
-	Existed(key string) bool
+	Existed(key interface{}) bool
 	Add(value Item)
-	Remove(key string)
-	Get(key string) Item
+	Remove(key interface{})
+	Get(key interface{}) Item
 	Size() int
 }
 

@@ -36,7 +36,7 @@ func (lru *Cache) String() string {
 	return fmt.Sprintf("<%d/%d>%s", len(lru.m), lru.capacity, buf.String())
 }
 
-func (lru *Cache) Existed(key string) bool {
+func (lru *Cache) Existed(key interface{}) bool {
 	lru.mtx.Lock()
 	_, ok := lru.m[key]
 	lru.mtx.Unlock()
@@ -44,7 +44,7 @@ func (lru *Cache) Existed(key string) bool {
 	return ok
 }
 
-func (lru *Cache) Get(key string) Item {
+func (lru *Cache) Get(key interface{}) Item {
 	lru.mtx.Lock()
 	defer lru.mtx.Unlock()
 
@@ -80,7 +80,7 @@ func (lru *Cache) Add(value Item) {
 	lru.m[value.GetKey()] = node
 }
 
-func (lru *Cache) Remove(key string) {
+func (lru *Cache) Remove(key interface{}) {
 	lru.mtx.Lock()
 	defer lru.mtx.Unlock()
 
