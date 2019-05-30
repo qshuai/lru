@@ -24,7 +24,7 @@ func (u *user) GetKey() interface{} {
 
 func main() {
   // set capacity to 3 for this cache as a sample
-  cache := lru.New(3)
+  cache := lru.New(3, true)
   // add 4 entries, the first entry will be removed automaticlly
   cache.Add(&user{"Andy", 23})
   cache.Add(&user{"Tom", 24})
