@@ -2,9 +2,9 @@ package lru
 
 type lrucache interface {
 	Existed(key string) bool
-	Add(value *Entry)
+	Add(value Item)
 	Remove(key string)
-	Get(key string) *Entry
+	Get(key string) Item
 	Size() int
 }
 

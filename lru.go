@@ -14,19 +14,7 @@ type Cache struct {
 	capacity int
 }
 
-type Entry struct {
-	// the map key
-	Key interface{}
-
-	Item interface{}
-}
-
 var _ lrucache = &Cache{}
-var _ Item = &Entry{}
-
-func (entry *Entry) GetKey() interface{} {
-	return entry.Key
-}
 
 func (lru *Cache) String() string {
 	lru.mtx.Lock()
@@ -56,7 +44,7 @@ func (lru *Cache) Existed(key string) bool {
 	return ok
 }
 
-func (lru *Cache) Get(key string) *Entry {
+func (lru *Cache) Get(key string) Item {
 	lru.mtx.Lock()
 	defer lru.mtx.Unlock()
 
@@ -68,28 +56,28 @@ func (lru *Cache) Get(key string) *Entry {
 	// update the node's sequence at the same time
 	lru.l.MoveToFront(ele)
 
-	return ele.Value.(*Entry)
+	return ele.Value.(Item)
 }
 
-func (lru *Cache) Add(value *Entry) {
+func (lru *Cache) Add(value Item) {
 	if lru.capacity == 0 {
 		return
 	}
 
 	if len(lru.m)+1 > lru.capacity {
 		ele := lru.l.Back()
-		entry := ele.Value.(*Entry)
-		delete(lru.m, entry.Key)
+		entry := ele.Value.(Item)
+		delete(lru.m, entry.GetKey())
 
 		ele.Value = value
 		lru.l.MoveToFront(ele)
-		lru.m[value.Key] = ele
+		lru.m[value.GetKey()] = ele
 
 		return
 	}
 
 	node := lru.l.PushFront(value)
-	lru.m[value.Key] = node
+	lru.m[value.GetKey()] = node
 }
 
 func (lru *Cache) Remove(key string) {
