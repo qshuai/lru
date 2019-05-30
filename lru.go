@@ -4,29 +4,29 @@ import (
 	"bytes"
 	"container/list"
 	"fmt"
-	"strconv"
 	"sync"
 )
 
 type Cache struct {
 	mtx      sync.Mutex
-	m        map[string]*list.Element
+	m        map[interface{}]*list.Element
 	l        *list.List
 	capacity int
 }
 
 type Entry struct {
 	// the map key
-	key string
+	Key interface{}
 
-	num int
-}
-
-func (entry *Entry) String() string {
-	return strconv.Itoa(entry.num)
+	Item interface{}
 }
 
 var _ lrucache = &Cache{}
+var _ Item = &Entry{}
+
+func (entry *Entry) GetKey() interface{} {
+	return entry.Key
+}
 
 func (lru *Cache) String() string {
 	lru.mtx.Lock()
@@ -79,17 +79,17 @@ func (lru *Cache) Add(value *Entry) {
 	if len(lru.m)+1 > lru.capacity {
 		ele := lru.l.Back()
 		entry := ele.Value.(*Entry)
-		delete(lru.m, entry.key)
+		delete(lru.m, entry.Key)
 
 		ele.Value = value
 		lru.l.MoveToFront(ele)
-		lru.m[value.key] = ele
+		lru.m[value.Key] = ele
 
 		return
 	}
 
 	node := lru.l.PushFront(value)
-	lru.m[value.key] = node
+	lru.m[value.Key] = node
 }
 
 func (lru *Cache) Remove(key string) {
@@ -114,7 +114,7 @@ func (lru *Cache) Size() int {
 
 func New(capacity int) *Cache {
 	return &Cache{
-		m:        make(map[string]*list.Element, capacity),
+		m:        make(map[interface{}]*list.Element, capacity),
 		l:        list.New(),
 		capacity: capacity,
 	}

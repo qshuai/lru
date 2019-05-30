@@ -7,3 +7,7 @@ type lrucache interface {
 	Get(key string) *Entry
 	Size() int
 }
+
+type Item interface {
+	GetKey() interface{}
+}
