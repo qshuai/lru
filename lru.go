@@ -8,10 +8,11 @@ import (
 )
 
 type Cache struct {
-	mtx      sync.Mutex
-	m        map[interface{}]*list.Element
-	l        *list.List
-	capacity int
+	mtx         sync.Mutex
+	m           map[interface{}]*list.Element
+	l           *list.List
+	capacity    int
+	accessOrder bool // keep access order or insert order
 }
 
 var _ lrucache = &Cache{}
@@ -36,6 +37,7 @@ func (lru *Cache) String() string {
 	return fmt.Sprintf("<%d/%d>%s", len(lru.m), lru.capacity, buf.String())
 }
 
+// Existed will not influence the entry order
 func (lru *Cache) Existed(key interface{}) bool {
 	lru.mtx.Lock()
 	_, ok := lru.m[key]
@@ -54,7 +56,9 @@ func (lru *Cache) Get(key interface{}) Item {
 	}
 
 	// update the node's sequence at the same time
-	lru.l.MoveToFront(ele)
+	if lru.accessOrder {
+		lru.l.MoveToFront(ele)
+	}
 
 	return ele.Value.(Item)
 }
@@ -70,7 +74,9 @@ func (lru *Cache) Add(value Item) {
 		delete(lru.m, entry.GetKey())
 
 		ele.Value = value
-		lru.l.MoveToFront(ele)
+		if lru.accessOrder {
+			lru.l.MoveToFront(ele)
+		}
 		lru.m[value.GetKey()] = ele
 
 		return
@@ -100,10 +106,11 @@ func (lru *Cache) Size() int {
 	return len(lru.m)
 }
 
-func New(capacity int) *Cache {
+func New(capacity int, accessOrder bool) *Cache {
 	return &Cache{
-		m:        make(map[interface{}]*list.Element, capacity),
-		l:        list.New(),
-		capacity: capacity,
+		m:           make(map[interface{}]*list.Element, capacity),
+		l:           list.New(),
+		capacity:    capacity,
+		accessOrder: accessOrder,
 	}
 }

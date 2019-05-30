@@ -15,7 +15,7 @@ func (entry *Entry) GetKey() interface{} {
 }
 
 func ExampleLruRemove() {
-	lru := New(3)
+	lru := New(3, true)
 	lru.Add(&Entry{key: "1", entry: 1})
 	lru.Add(&Entry{key: "2", entry: 2})
 	lru.Add(&Entry{key: "3", entry: 3})
@@ -29,7 +29,7 @@ func ExampleLruRemove() {
 }
 
 func ExampleLruGet() {
-	lru := New(3)
+	lru := New(3, true)
 	lru.Add(&Entry{key: "1", entry: 1})
 	lru.Add(&Entry{key: "2", entry: 2})
 	lru.Add(&Entry{key: "3", entry: 3})
