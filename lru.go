@@ -5,6 +5,8 @@ import (
 	"container/list"
 	"fmt"
 	"sync"
+
+	"github.com/pkg/errors"
 )
 
 type Cache struct {
@@ -13,7 +15,11 @@ type Cache struct {
 	l           *list.List
 	capacity    int
 	accessOrder bool // keep access order or insert order
+
+	Callback func(item Item) error
 }
+
+var CallbackNotFound = errors.New("The necessary callback function not found")
 
 var _ lrucache = &Cache{}
 
@@ -63,9 +69,13 @@ func (lru *Cache) Get(key interface{}) Item {
 	return ele.Value.(Item)
 }
 
-func (lru *Cache) Add(value Item) {
+func (lru *Cache) Add(value Item) error {
 	if lru.capacity == 0 {
-		return
+		if lru.Callback == nil {
+			return CallbackNotFound
+		}
+
+		return lru.Callback(value)
 	}
 
 	if len(lru.m)+1 > lru.capacity {
@@ -73,17 +83,25 @@ func (lru *Cache) Add(value Item) {
 		entry := ele.Value.(Item)
 		delete(lru.m, entry.GetKey())
 
+		// execution the callback function firstly, to avoid
+		// disrupt the origin element value
+		if lru.Callback != nil {
+			return lru.Callback(entry)
+		}
+
 		ele.Value = value
 		if lru.accessOrder {
 			lru.l.MoveToFront(ele)
 		}
 		lru.m[value.GetKey()] = ele
 
-		return
+		return nil
 	}
 
 	node := lru.l.PushFront(value)
 	lru.m[value.GetKey()] = node
+
+	return nil
 }
 
 func (lru *Cache) Remove(key interface{}) {
