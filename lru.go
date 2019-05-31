@@ -86,7 +86,10 @@ func (lru *Cache) Add(value Item) error {
 		// execution the callback function firstly, to avoid
 		// disrupt the origin element value
 		if lru.Callback != nil {
-			return lru.Callback(entry)
+			err := lru.Callback(entry)
+			if err != nil {
+				return err
+			}
 		}
 
 		ele.Value = value
