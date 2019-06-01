@@ -17,6 +17,7 @@ type Cache struct {
 	accessOrder bool // keep access order or insert order
 
 	Callback func(item Item) error
+	ForEach  func(item Item) error
 }
 
 var CallbackNotFound = errors.New("The necessary callback function not found")
@@ -125,6 +126,17 @@ func (lru *Cache) Size() int {
 	defer lru.mtx.Unlock()
 
 	return len(lru.m)
+}
+
+func (lru *Cache) Iterate() error {
+	for _, v := range lru.m {
+		err := lru.ForEach(v.Value.(Item))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func New(capacity int, accessOrder bool) *Cache {
