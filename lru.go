@@ -3,10 +3,9 @@ package lru
 import (
 	"bytes"
 	"container/list"
+	"errors"
 	"fmt"
 	"sync"
-
-	"github.com/pkg/errors"
 )
 
 type Cache struct {
@@ -20,7 +19,7 @@ type Cache struct {
 	ForEach  func(item Item) error
 }
 
-var CallbackNotFound = errors.New("The necessary callback function not found")
+var CallbackNotFound = errors.New("the necessary callback function not found")
 
 var _ lrucache = &Cache{}
 
