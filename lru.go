@@ -9,7 +9,8 @@ import (
 )
 
 type Cache struct {
-	mtx         sync.Mutex
+	sync.RWMutex
+
 	m           map[interface{}]*list.Element
 	l           *list.List
 	capacity    int
@@ -24,8 +25,8 @@ var CallbackNotFound = errors.New("the necessary callback function not found")
 var _ lrucache = &Cache{}
 
 func (lru *Cache) String() string {
-	lru.mtx.Lock()
-	defer lru.mtx.Unlock()
+	lru.RLock()
+	defer lru.RUnlock()
 
 	lastEntryNum := len(lru.m) - 1
 	curEntry := 0
@@ -45,16 +46,16 @@ func (lru *Cache) String() string {
 
 // Existed will not influence the entry order
 func (lru *Cache) Existed(key interface{}) bool {
-	lru.mtx.Lock()
+	lru.RLock()
 	_, ok := lru.m[key]
-	lru.mtx.Unlock()
+	lru.RUnlock()
 
 	return ok
 }
 
 func (lru *Cache) Get(key interface{}) Item {
-	lru.mtx.Lock()
-	defer lru.mtx.Unlock()
+	lru.RLock()
+	defer lru.RUnlock()
 
 	ele, ok := lru.m[key]
 	if !ok {
@@ -70,6 +71,9 @@ func (lru *Cache) Get(key interface{}) Item {
 }
 
 func (lru *Cache) Add(value Item) error {
+	lru.Lock()
+	defer lru.Unlock()
+
 	if lru.capacity == 0 {
 		if lru.Callback == nil {
 			return CallbackNotFound
@@ -108,8 +112,8 @@ func (lru *Cache) Add(value Item) error {
 }
 
 func (lru *Cache) Remove(key interface{}) {
-	lru.mtx.Lock()
-	defer lru.mtx.Unlock()
+	lru.Lock()
+	defer lru.Unlock()
 
 	ele, ok := lru.m[key]
 	if !ok {
@@ -121,13 +125,16 @@ func (lru *Cache) Remove(key interface{}) {
 }
 
 func (lru *Cache) Size() int {
-	lru.mtx.Lock()
-	defer lru.mtx.Unlock()
+	lru.RLock()
+	defer lru.RUnlock()
 
-	return len(lru.m)
+	return lru.l.Len()
 }
 
 func (lru *Cache) Iterate() error {
+	lru.RLock()
+	defer lru.RUnlock()
+
 	for _, v := range lru.m {
 		err := lru.ForEach(v.Value.(Item))
 		if err != nil {
